@@ -1,22 +1,25 @@
 // src/layouts/AdminLayout.jsx
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { BarChart3, FileText, Users, CheckCircle, MapPin, Sparkles } from 'lucide-react';
 
 const AdminLayout = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const menuItems = [
         { icon: BarChart3, label: 'Dashboard', route: '/admin' },
-        { icon: FileText, label: 'Trials', route: '/trials/new' },
+        { icon: FileText, label: 'Trials', route: '/admin/trials' },
         { icon: Users, label: 'Farmers', route: '/farmers' },
         { icon: CheckCircle, label: 'Approvals', route: '/submissions' },
         { icon: MapPin, label: 'Locations', route: '/locations' },
     ];
 
+    const isActive = (route) => location.pathname === route || (route === '/trials/new' && location.pathname.startsWith('/trials/'));
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
-            {/* Fixed Navbar */}
+            {/* Navbar */}
             <nav className="fixed top-0 left-0 right-0 z-50 bg-white backdrop-blur-xl border-b border-gray-200 px-4 md:px-6 h-16 flex items-center justify-between shadow-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-green-700 to-green-600 rounded-xl flex items-center justify-center shadow-md">
@@ -35,15 +38,15 @@ const AdminLayout = () => {
             {/* Sidebar */}
             <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-64 backdrop-blur-xl border-r border-gray-200 flex-col p-4 z-40" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
                 <nav className="space-y-2 mt-4">
-                    {menuItems.map((item, idx) => {
+                    {menuItems.map((item) => {
                         const Icon = item.icon;
-                        const isActive = location.pathname === item.route;
+                        const active = isActive(item.route);
                         return (
                             <button
-                                key={idx}
+                                key={item.label}
                                 onClick={() => navigate(item.route)}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                                    isActive
+                                    active
                                         ? 'bg-gradient-to-r from-green-700 to-green-600 text-white shadow-lg'
                                         : 'text-gray-600 hover:bg-gray-100 hover:translate-x-1'
                                 }`}
@@ -56,9 +59,9 @@ const AdminLayout = () => {
                 </nav>
             </aside>
 
-            {/* Main Content Area */}
-            <main className="lg:ml-64 pt-16 min-h-screen">
-                <Outlet /> {/* This renders the child page (Dashboard, TrialSetup, etc.) */}
+            {/* Main Content */}
+            <main className="lg:ml-64 pt-16 min-h-screen pb-20 lg:pb-6">
+                <Outlet />
             </main>
 
             {/* Floating AI Button */}

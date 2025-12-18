@@ -19,36 +19,6 @@ const Navbar = () => (
     </nav>
 );
 
-const Sidebar = ({ navigate }) => {
-    const menuItems = [
-        { icon: BarChart3, label: 'Dashboard', active: true, route: '/admin' },
-        { icon: FileText, label: 'Trials', active: false, route: '/trials/new' },
-        { icon: Users, label: 'Farmers', active: false, route: '/farmers' },
-        { icon: CheckCircle, label: 'Approvals', active: false, route: '/submissions' },
-        { icon: MapPin, label: 'Locations', active: false, route: '/locations' },
-    ];
-
-    return (
-        <aside className="hidden lg:flex fixed left-0 top-16 bottom-0 w-64 backdrop-blur-xl border-r border-gray-200 flex-col p-4 z-40" style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
-            <nav className="space-y-2 mt-4">
-                {menuItems.map((item, idx) => {
-                    const Icon = item.icon;
-                    return (
-                        <button
-                            key={idx}
-                            onClick={() => navigate(item.route)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${item.active ? 'bg-gradient-to-r from-green-700 to-green-600 text-white shadow-lg' : 'text-gray-600 hover:bg-gray-100 hover:translate-x-1'}`}
-                        >
-                            <Icon className="w-5 h-5" />
-                            <span className="font-medium">{item.label}</span>
-                        </button>
-                    );
-                })}
-            </nav>
-        </aside>
-    );
-};
-
 const MobileBottomNav = ({ navigate }) => {
     const items = [
         { icon: BarChart3, label: 'Dashboard', active: true, route: '/admin' },
@@ -169,17 +139,13 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
-            <Navbar />
-            <Sidebar navigate={navigate} />
-
-            <main className="lg:ml-64 pt-16 pb-24 lg:pb-6">
-                <div className="relative overflow-hidden bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-100">
-                    <div className="relative px-4 md:px-6 py-8">
-                        <h1 className="text-3xl md:text-4xl font-bold text-green-950 mb-2">{greeting}, Dr. Aisha 👋</h1>
-                        <p className="text-gray-600">{currentDate}</p>
+        <>
+                    <div className="relative overflow-hidden bg-gradient-to-r from-orange-100 via-yellow-50 to-orange-100">
+                        <div className="relative px-4 md:px-6 py-8">
+                            <h1 className="text-3xl md:text-4xl font-bold text-green-950 mb-2">{greeting}, Dr. Aisha 👋</h1>
+                            <p className="text-gray-600">{currentDate}</p>
+                        </div>
                     </div>
-                </div>
 
                 <div className="px-4 md:px-6 py-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
@@ -335,11 +301,7 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </div>
-            </main>
-
-            <MobileBottomNav navigate={navigate} />
-            <FloatingChatButton navigate={navigate} />
-        </div>
+            </>
     );
 };
 
