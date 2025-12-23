@@ -15,7 +15,7 @@ const AdminLayout = () => {
         { icon: MapPin, label: 'Locations', route: '/locations' },
     ];
 
-    const isActive = (route) => location.pathname === route || (route === '/trials/new' && location.pathname.startsWith('/trials/'));
+    const isActive = (route) => location.pathname.startsWith(route);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">

@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Leaf, FileText, Camera, MapPin, Clock, CheckCircle, Plus, User, Sparkles } from 'lucide-react';
-import { trialsData } from '../data/trials'; // ← IMPORT DATA
+import { getTrials } from '../data/trials'; // ← IMPORT DATA
 
 const Navbar = () => (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-90 backdrop-blur-xl border-b border-gray-200 px-4 md:px-6 h-16 flex items-center justify-between shadow-md">
@@ -71,17 +71,14 @@ const FarmerDashboard = () => {
 
     const getProgress = (done, total) => (done / total) * 100;
 
-    const activeTrials = trialsData.filter(t => t.status === 'ongoing').length;
+    const activeTrials = getTrials().filter(t => t.status === 'ongoing').length;
 
     const handleTrialClick = (trialId) => {
         navigate(`/trials/${trialId}`); // ← NOW ROUTES TO SPECIFIC TRIAL DETAILS
     };
 
     return (
-        <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-emerald-50 overflow-x-hidden">
-            <Navbar />
-
-            <main className="w-full pt-20 pb-24 md:pb-10 px-4 md:px-6 lg:px-8">
+        <div className="pt-6 pb-20 px-4 md:px-6 lg:px-8">
                 <div className="w-full py-6 md:py-8">
                     <h1 className="text-3xl md:text-4xl font-bold text-green-950 mb-2">
                         Welcome back, Musa 👋
@@ -95,7 +92,7 @@ const FarmerDashboard = () => {
                     <div className="bg-white bg-opacity-90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-gray-100 transition-all hover:-translate-y-1 hover:shadow-2xl">
                         <div className="flex items-center justify-between mb-4">
                             <FileText className="w-10 h-10 text-green-600" />
-                            <span className="text-3xl md:text-4xl font-bold text-green-950">{trialsData.length}</span>
+                            <span className="text-3xl md:text-4xl font-bold text-green-950">{getTrials().length}</span>
                         </div>
                         <p className="text-gray-600 font-medium">Assigned Trials</p>
                     </div>
@@ -109,7 +106,7 @@ const FarmerDashboard = () => {
                     <div className="bg-white bg-opacity-90 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-gray-100 transition-all hover:-translate-y-1 hover:shadow-2xl sm:col-span-2 md:col-span-1">
                         <div className="flex items-center justify-between mb-4">
                             <CheckCircle className="w-10 h-10 text-green-600" />
-                            <span className="text-3xl md:text-4xl font-bold text-green-950">{trialsData.filter(t => t.status === 'completed').length}</span>
+                            <span className="text-3xl md:text-4xl font-bold text-green-950">{getTrials().filter(t => t.status === 'completed').length}</span>
                         </div>
                         <p className="text-gray-600 font-medium">Completed Trials</p>
                     </div>
@@ -119,7 +116,7 @@ const FarmerDashboard = () => {
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                         <h2 className="text-2xl md:text-3xl font-bold text-green-950">Your Assigned Trials</h2>
                         <button
-                            onClick={() => navigate('/submit')}
+                            onClick={() => navigate('./submit')}
                             className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-green-700 to-green-600 text-white rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-all hover:scale-105 active:scale-95"
                         >
                             <Plus className="w-5 h-5" />
@@ -128,7 +125,7 @@ const FarmerDashboard = () => {
                     </div>
 
                     <div className="space-y-4 md:space-y-6">
-                        {trialsData.map((trial) => (
+                        {getTrials().map((trial) => (
                             <div
                                 key={trial.id}
                                 onClick={() => handleTrialClick(trial.id)}
@@ -177,9 +174,9 @@ const FarmerDashboard = () => {
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 if (trial.status === 'completed') {
-                                                    navigate(`/trials/${trial.id}`); // View detailed report
+                                                    navigate(`/trials/${trial.id}`); // View report (unchanged)
                                                 } else {
-                                                    navigate('/submit'); // Continue current submission
+                                                    navigate(`./submit?trial=${trial.id}`); // ← Pass trial ID
                                                 }
                                             }}
                                             className="w-full md:w-auto px-6 py-2.5 bg-gradient-to-r from-green-700 to-green-600 text-white rounded-lg font-medium text-sm shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
@@ -192,10 +189,6 @@ const FarmerDashboard = () => {
                         ))}
                     </div>
                 </div>
-            </main>
-
-            <MobileBottomNav navigate={navigate} />
-            <FloatingChatButton navigate={navigate} />
         </div>
     );
 };

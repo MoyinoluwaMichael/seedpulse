@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Plus, Users, MapPin, Calendar, CheckCircle, Clock } from 'lucide-react';
-import { trialsData } from '../data/trials';
+import { getTrials } from '../data/trials';
 
 const TrialsListPage = () => {
     const navigate = useNavigate();
@@ -29,7 +29,7 @@ const TrialsListPage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {trialsData.map((trial) => (
+                    {getTrials().map((trial) => (
                         <div
                             key={trial.id}
                             onClick={() => navigate(`/trials/${trial.id}`)}
@@ -75,7 +75,7 @@ const TrialsListPage = () => {
                     ))}
                 </div>
 
-                {trialsData.length === 0 && (
+                {getTrials().length === 0 && (
                     <div className="text-center py-20">
                         <FileText className="w-20 h-20 text-gray-300 mx-auto mb-6" />
                         <h3 className="text-xl font-semibold text-gray-600 mb-2">No trials yet</h3>

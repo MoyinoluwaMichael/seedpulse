@@ -1,140 +1,246 @@
+// src/pages/FieldSubmissionForm.jsx
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Camera, MapPin, Leaf, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Camera, X, ChevronLeft, Check, Leaf, Clock} from 'lucide-react';
+import { getTrials } from '../data/trials';
 
 const FieldSubmissionForm = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Read trial ID from URL query param (e.g. /farmer/submit?trial=TR-2025-002)
+    const queryParams = new URLSearchParams(location.search);
+    const trialIdFromUrl = queryParams.get('trial');
+
+    // Algorithm to choose the best default trial
+    let selectedTrial;
+
+    if (trialIdFromUrl) {
+        // 1. Priority: Trial explicitly passed via URL (from "Continue Submission")
+        selectedTrial = getTrials().find(t => t.id === trialIdFromUrl);
+    }
+
+    if (!selectedTrial) {
+        // 2. Find all ongoing trials
+        const ongoingTrials = getTrials().filter(t => t.status === 'ongoing');
+
+        if (ongoingTrials.length > 0) {
+            // Sort by urgency:
+            // - Earliest due date first
+            // - If tie, lowest progress first
+            selectedTrial = ongoingTrials
+                .slice()
+                .sort((a, b) => {
+                    if (a.due !== b.due) {
+                        return a.due.localeCompare(b.due); // earliest due date first
+                    }
+                    const progressA = a.submissions / a.totalRequired;
+                    const progressB = b.submissions / b.totalRequired;
+                    return progressA - progressB; // lowest progress first
+                })[0];
+        }
+    }
+
+    // 3. Fallback: if no ongoing trials, use most recent completed or first trial
+    if (!selectedTrial) {
+        const completedTrials = getTrials
+            .filter(t => t.status === 'completed')
+            .sort((a, b) => b.due.localeCompare(a.due)); // most recent first
+        selectedTrial = completedTrials[0] || getTrials[0];
+    }
+
+    const trial = selectedTrial;
+
     const [photos, setPhotos] = useState([]);
     const [notes, setNotes] = useState('');
-    const [gpsLocation, setGpsLocation] = useState('Acquiring location...');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [stage, setStage] = useState('tillering');
 
-    const mockTrial = {
-        id: 'TR-2025-001',
-        crop: 'Rice',
-        variety: 'FARO-66',
-        location: 'Kura LGA, Kano State',
-        requiredPhotos: ['Plant height', 'Leaf condition', 'Panicle', 'Weeds', 'General field view'],
-    };
+    const stages = ['tillering', 'flowering', 'grain filling', 'harvest'];
 
     const handlePhotoUpload = (e) => {
         const files = Array.from(e.target.files);
-        setPhotos(prev => [...prev, ...files.map(file => ({ file, preview: URL.createObjectURL(file), name: file.name }))]);
+        const newPhotos = files.map(file => ({
+            id: Date.now() + Math.random(),
+            file,
+            preview: URL.createObjectURL(file),
+            stage
+        }));
+        setPhotos(prev => [...prev, ...newPhotos]);
     };
 
-    const handleSubmit = async () => {
-        setIsSubmitting(true);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsSubmitting(false);
-        alert('Submission successful! Thank you for your data.');
+    const removePhoto = (id) => {
+        setPhotos(prev => prev.filter(p => p.id !== id));
+    };
+
+    const handleSubmit = () => {
+        alert(
+            `Submission saved for ${trial.crop} - ${trial.variety}!\n` +
+            `Stage: ${stage.replace(/^\w/, c => c.toUpperCase())}\n` +
+            `Photos: ${photos.length}\n` +
+            `Notes: ${notes || 'None'}`
+        );
+        navigate('/farmer');
     };
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/50 px-4 py-4">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                    <button onClick={() => window.history.back()} className="flex items-center gap-2 text-green-700 hover:text-green-600">
-                        <ArrowLeft className="w-5 h-5" />
+        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
+            {/* Fixed Header */}
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-90 backdrop-blur-xl border-b border-gray-200 shadow-sm">
+                <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-green-700 hover:text-green-600 transition-colors"
+                    >
+                        <ChevronLeft className="w-5 h-5" />
                         <span className="font-semibold">Back</span>
                     </button>
-                    <h1 className="text-lg font-bold text-green-950">New Submission</h1>
-                    <div className="w-9" /> {/* Spacer */}
+                    <h1 className="text-xl font-bold text-green-950">Field Submission</h1>
+                    <div className="w-10" />
                 </div>
             </div>
 
+            {/* Main Content */}
             <div className="pt-20 px-4 pb-32">
-                <div className="max-w-4xl mx-auto">
-                    {/* Trial Info */}
-                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 mb-6 shadow-lg border border-gray-200/50">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="p-3 bg-gradient-to-br from-green-700 to-green-600 rounded-xl">
-                                <Leaf className="w-8 h-8 text-white" />
+                <div className="max-w-4xl mx-auto space-y-8">
+                    {/* Trial Header Card */}
+                    <div className="bg-white bg-opacity-90 backdrop-blur-xl rounded-3xl p-8 shadow-xl border border-gray-200">
+                        <div className="flex items-center gap-5 mb-6">
+                            <div className="w-16 h-16 bg-gradient-to-br from-green-700 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <Leaf className="w-10 h-10 text-white" />
                             </div>
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800">{mockTrial.crop} - {mockTrial.variety}</h2>
-                                <p className="text-gray-600">{mockTrial.id}</p>
+                                <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+                                    {trial.crop} - {trial.variety}
+                                </h2>
+                                <p className="text-gray-600 mt-1">{trial.location}</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                            <MapPin className="w-5 h-5" />
-                            <span>{mockTrial.location}</span>
-                        </div>
-                    </motion.div>
 
-                    {/* GPS Location */}
-                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 mb-6 shadow-lg border border-gray-200/50">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <MapPin className="w-8 h-8 text-green-600" />
-                                <div>
-                                    <p className="font-semibold text-gray-800">Current Location</p>
-                                    <p className="text-sm text-gray-600">{gpsLocation}</p>
+                        {/* Auto-selected hint (only when no trial from URL) */}
+                        {!trialIdFromUrl && trial.status === 'ongoing' && (
+                            <p className="text-sm text-green-700 flex items-center gap-2 mb-4">
+                                <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
+                                Auto-selected: Most urgent trial
+                            </p>
+                        )}
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+                            <div className="text-center">
+                                <p className="text-4xl font-bold text-green-700">{trial.submissions}/{trial.totalRequired}</p>
+                                <p className="text-sm text-gray-600 mt-1">Submissions</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-4xl font-bold text-orange-600">
+                                    {Math.round((trial.submissions / trial.totalRequired) * 100)}%
+                                </p>
+                                <p className="text-sm text-gray-600 mt-1">Progress</p>
+                            </div>
+                            <div className="text-center">
+                                <p className="text-2xl font-semibold text-gray-800">{trial.due}</p>
+                                <p className="text-sm text-gray-600 mt-1">Due Date</p>
+                            </div>
+                            <div className="text-center">
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                                    trial.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                }`}>
+                                    {trial.status === 'completed' ? <Check className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                                    {trial.status === 'completed' ? 'Completed' : 'Ongoing'}
                                 </div>
                             </div>
-                            <CheckCircle className="w-8 h-8 text-green-600" />
                         </div>
-                    </motion.div>
+                    </div>
 
-                    {/* Photo Upload */}
-                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 mb-6 shadow-lg border border-gray-200/50">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">Upload Photos ({photos.length}/{mockTrial.requiredPhotos.length})</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-                            {mockTrial.requiredPhotos.map((req, idx) => (
-                                <div key={idx} className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center">
-                                    <Camera className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                                    <p className="text-sm text-gray-600">{req}</p>
-                                </div>
+                    {/* Growth Stage Selector */}
+                    <div>
+                        <label className="block text-lg font-semibold text-gray-800 mb-4">Current Growth Stage</label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            {stages.map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => setStage(s)}
+                                    className={`p-5 rounded-2xl border-2 transition-all ${
+                                        stage === s
+                                            ? 'border-green-600 bg-green-50 shadow-md'
+                                            : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                                >
+                                    <p className="font-medium capitalize">{s.replace('-', ' ')}</p>
+                                </button>
                             ))}
                         </div>
+                    </div>
 
-                        <label className="block">
-                            <input type="file" multiple accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                            <div className="px-6 py-4 bg-gradient-to-r from-green-700 to-green-600 text-white rounded-xl font-semibold text-center cursor-pointer hover:shadow-lg flex items-center justify-center gap-2">
-                                <Upload className="w-5 h-5" />
-                                Upload Photos
+                    {/* Photo Upload */}
+                    <div>
+                        <label className="block text-lg font-semibold text-gray-800 mb-4">
+                            Upload Photos ({photos.length})
+                        </label>
+                        <label className="block cursor-pointer">
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={handlePhotoUpload}
+                                className="hidden"
+                            />
+                            <div className="border-4 border-dashed border-gray-300 rounded-3xl p-12 text-center hover:border-green-500 transition-all bg-white/70">
+                                <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <p className="text-lg font-medium text-gray-700">Click to upload or drag photos here</p>
+                                <p className="text-sm text-gray-500 mt-2">Multiple photos supported</p>
                             </div>
                         </label>
 
                         {photos.length > 0 && (
-                            <div className="mt-6 grid grid-cols-3 gap-3">
-                                {photos.map((photo, idx) => (
-                                    <motion.div key={idx} initial={{ scale: 0 }} animate={{ scale: 1 }} className="relative">
-                                        <img src={photo.preview} alt="" className="w-full h-32 object-cover rounded-lg" />
-                                        <button onClick={() => setPhotos(prev => prev.filter((_, i) => i !== idx))} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                                {photos.map((photo) => (
+                                    <div key={photo.id} className="relative group rounded-2xl overflow-hidden shadow-lg">
+                                        <img
+                                            src={photo.preview}
+                                            alt="Field submission"
+                                            className="w-full h-48 object-cover"
+                                        />
+                                        <button
+                                            onClick={() => removePhoto(photo.id)}
+                                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
                                             <X className="w-4 h-4" />
                                         </button>
-                                    </motion.div>
+                                        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-3 py-1 rounded-lg">
+                                            {photo.stage.replace(/^\w/, c => c.toUpperCase())}
+                                        </div>
+                                    </div>
                                 ))}
                             </div>
                         )}
-                    </motion.div>
+                    </div>
 
                     {/* Notes */}
-                    <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 mb-32 shadow-lg border border-gray-200/50">
-                        <h3 className="text-xl font-bold text-gray-800 mb-4">Additional Notes (Optional)</h3>
+                    <div>
+                        <label className="block text-lg font-semibold text-gray-800 mb-4">Farmer Notes (Optional)</label>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            rows="5"
-                            placeholder="Any observations about pests, weather, growth stage, etc..."
-                            className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-green-600 focus:outline-none resize-none"
+                            placeholder="Add observations: pests, weather, growth issues, fertilizer used, etc..."
+                            className="w-full p-5 bg-white border-2 border-gray-200 rounded-2xl focus:border-green-600 outline-none resize-none h-40 text-gray-700"
                         />
-                    </motion.div>
+                    </div>
                 </div>
             </div>
 
-            {/* Submit Button */}
-            <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 shadow-2xl p-4">
-                <div className="max-w-4xl mx-auto">
+            {/* Fixed Submit Button */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-40">
+                <div className="max-w-4xl mx-auto px-4 py-4">
                     <button
                         onClick={handleSubmit}
-                        disabled={isSubmitting || photos.length === 0}
-                        className="w-full py-4 bg-gradient-to-r from-green-700 to-green-600 text-white rounded-xl font-bold text-lg shadow-lg disabled:opacity-50"
+                        disabled={photos.length === 0}
+                        className="w-full py-5 bg-gradient-to-r from-green-700 to-green-600 text-white rounded-2xl font-bold text-lg shadow-lg flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed transition-all hover:shadow-xl"
                     >
-                        {isSubmitting ? 'Submitting...' : 'Submit Data'}
+                        <Check className="w-6 h-6" />
+                        Submit Data for {trial.variety}
                     </button>
                 </div>
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
     );
 };
 

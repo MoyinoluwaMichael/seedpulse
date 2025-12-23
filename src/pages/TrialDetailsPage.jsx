@@ -2,16 +2,16 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Users, FileText, MapPin, Camera, Sparkles } from 'lucide-react';
-import { trialsData } from '../data/trials';
+import { getTrials, getTrialById } from '../data/trials';
 
 const TrialDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const trial = trialsData.find(t => t.id === id);
+    const trial = getTrialById(id);
 
     if (!trial) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50">
                 <p className="text-2xl text-gray-600">Trial not found</p>
             </div>
         );
@@ -21,9 +21,13 @@ const TrialDetailsPage = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50">
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-90 backdrop-blur-xl border-b border-gray-200 px-4 py-4">
-                <div className="max-w-6xl mx-auto flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-green-700 hover:text-green-600">
+            {/* Header */}
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-90 backdrop-blur-xl border-b border-gray-200 shadow-sm">
+                <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center gap-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-green-700 hover:text-green-600 transition-colors"
+                    >
                         <ArrowLeft className="w-5 h-5" />
                         <span className="font-semibold">Back</span>
                     </button>
@@ -31,12 +35,15 @@ const TrialDetailsPage = () => {
                 </div>
             </div>
 
+            {/* Content */}
             <div className="pt-20 px-4 pb-10">
                 <div className="max-w-6xl mx-auto">
                     <div className="bg-white bg-opacity-90 backdrop-blur-xl rounded-3xl p-8 mb-8 shadow-xl border border-gray-200">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                             <div>
-                                <h2 className="text-3xl font-bold text-gray-800 mb-2">{trial.crop} - {trial.variety}</h2>
+                                <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                                    {trial.crop} - {trial.variety}
+                                </h2>
                                 <p className="text-xl text-gray-600">{trial.description}</p>
                                 <div className="flex items-center gap-2 mt-4 text-green-700 font-semibold">
                                     <div className="w-4 h-4 bg-green-600 rounded-full animate-pulse" />
@@ -68,7 +75,7 @@ const TrialDetailsPage = () => {
                         })}
                     </div>
 
-                    <div className="bg-white bg-opacity-90 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200">
+                    <div className="bg-white bg-opacity-90 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-gray-200 mb-8">
                         <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                             <MapPin className="w-6 h-6 text-green-600" />
                             Primary Location
@@ -77,10 +84,11 @@ const TrialDetailsPage = () => {
                         <p className="text-sm text-gray-600 mt-2">Also active in: {trial.states.join(', ')}</p>
                     </div>
 
-                    <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-start">
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                         {trial.status === 'ongoing' ? (
                             <button
-                                onClick={() => navigate('/submit')}
+                                onClick={() => navigate(`/farmer/submit?trial=${trial.id}`)}
                                 className="px-8 py-4 bg-gradient-to-r from-green-700 to-green-600 text-white rounded-xl font-bold shadow-lg flex items-center gap-3 hover:shadow-xl transition-all hover:scale-105 active:scale-95"
                             >
                                 <Camera className="w-6 h-6" />
@@ -96,7 +104,6 @@ const TrialDetailsPage = () => {
                             </button>
                         )}
 
-                        {/* Optional: Always show AI help button */}
                         <button
                             onClick={() => navigate('/chat')}
                             className="px-8 py-4 bg-white text-green-700 border-2 border-green-600 rounded-xl font-bold shadow-lg flex items-center gap-3 hover:shadow-xl transition-all hover:scale-105 active:scale-95"

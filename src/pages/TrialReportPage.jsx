@@ -2,13 +2,13 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, BarChart3, Camera, FileText, Target, Award, CheckCircle } from 'lucide-react';
-import { trialsData } from '../data/trials';
+import { getTrials, getTrialById } from '../data/trials';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const TrialReportPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const trial = trialsData.find(t => t.id === id);
+    const trial = getTrials(id);
 
     if (!trial || trial.status !== 'completed') {
         return (
