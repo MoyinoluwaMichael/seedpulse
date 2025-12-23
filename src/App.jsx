@@ -19,9 +19,9 @@ import SubmissionsReviewPage from './pages/SubmissionsReviewPage.jsx';
 import TrialSetupPage from './pages/TrialSetupPage.jsx';
 import TrialDetailsPage from './pages/TrialDetailsPage.jsx';
 import FieldSubmissionForm from './pages/FieldSubmissionForm.jsx';
-import TrialsListPage from './pages/TrialsListPage.jsx';
 import AdminTrialsPage from './pages/AdminTrialsPage.jsx';
 import AdminTrialDetailsPage from './pages/AdminTrialDetailsPage.jsx';
+import UnderConstructionPage from './pages/UnderConstructionPage.jsx';
 
 const ProtectedRoute = ({ children }) => {
     const { user, loading } = useAuth();
@@ -50,33 +50,35 @@ function App() {
             {/* Stakeholder */}
             <Route path="/stakeholder" element={<ProtectedRoute><StakeholderH2HDashboard /></ProtectedRoute>} />
 
-            {/* Shared */}
-            <Route path="/h2h" element={<ProtectedRoute><HeadToHeadComparisonPage /></ProtectedRoute>} />
-
-            {/* Trial Details & Report (accessible from anywhere) */}
+            {/* Trial Details & Report (farmer view) */}
             <Route path="/trials/:id" element={<ProtectedRoute><TrialDetailsPage /></ProtectedRoute>} />
             <Route path="/trials/:id/report" element={<ProtectedRoute><TrialReportPage /></ProtectedRoute>} />
 
-            {/* Admin - Shared Layout */}
+            {/* Head-to-Head Analytics - Admin Only, Inside Admin Layout */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="trials" element={<AdminTrialsPage />} />
                 <Route path="trials/new" element={<TrialSetupPage />} />
-                <Route path="trials/:id" element={<AdminTrialDetailsPage />} /> {/* NEW ADMIN DETAILS */}
+                <Route path="trials/:id" element={<AdminTrialDetailsPage />} />
                 <Route path="submissions" element={<SubmissionsReviewPage />} />
-                <Route path="farmers" element={<div className="p-12"><h1 className="text-4xl font-bold text-green-950">Farmers Management</h1></div>} />
-                <Route path="locations" element={<div className="p-12"><h1 className="text-4xl font-bold text-green-950">Locations Management</h1></div>} />
+                <Route path="h2h" element={<HeadToHeadComparisonPage />} /> {/* ← Fixed: relative path */}
+
+                {/* Generic fallback for any undefined admin route */}
+                <Route path="*" element={<UnderConstructionPage pageName="Admin Feature" />} />
             </Route>
 
-            {/* Farmer - ALL farmer pages inside shared layout */}
+            {/* Farmer Portal */}
             <Route path="/farmer" element={<ProtectedRoute><FarmerLayout /></ProtectedRoute>}>
                 <Route index element={<FarmerDashboard />} />
                 <Route path="submit" element={<FieldSubmissionForm />} />
                 <Route path="chat" element={<AIChatbotPage />} />
-                <Route path="profile" element={<div className="p-12"><h1 className="text-4xl font-bold text-green-950">My Profile</h1><p className="mt-6 text-gray-600">View and edit your information</p><p className="mt-4 text-gray-500">Coming soon...</p></div>} />
+                <Route path="profile" element={<UnderConstructionPage pageName="My Profile" />} />
+
+                {/* Generic fallback for farmer routes */}
+                <Route path="*" element={<UnderConstructionPage pageName="Farmer Feature" />} />
             </Route>
 
-            {/* Fallback */}
+            {/* Global Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
