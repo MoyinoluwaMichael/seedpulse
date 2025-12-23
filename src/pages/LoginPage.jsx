@@ -282,7 +282,7 @@ const LoginPage = () => {
                 setTimeout(() => navigate('/farmer'), 1500);
             } else {
                 // Admin Login (hardcoded for now)
-                if (formData.email !== 'admin@example.com' || formData.password !== 'admin123') {
+                if (formData.email !== 'admin@example.com' || formData.password !== 'password') {
                     setErrors({ email: 'Invalid admin credentials' });
                     setIsLoading(false);
                     return;

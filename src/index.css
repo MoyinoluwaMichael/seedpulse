@@ -1,8 +1,12 @@
+/* Import external CSS FIRST */
+@import 'leaflet/dist/leaflet.css';
+
+/* Then Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Remove the problematic Vite default styles */
+/* Custom styles after */
 html,
 body {
   margin: 0;

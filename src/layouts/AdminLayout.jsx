@@ -10,12 +10,19 @@ const AdminLayout = () => {
     const menuItems = [
         { icon: BarChart3, label: 'Dashboard', route: '/admin' },
         { icon: FileText, label: 'Trials', route: '/admin/trials' },
-        { icon: Users, label: 'Farmers', route: '/farmers' },
-        { icon: CheckCircle, label: 'Approvals', route: '/submissions' },
-        { icon: MapPin, label: 'Locations', route: '/locations' },
+        { icon: FileText, label: 'Submissions', route: '/admin/submissions' },
+        { icon: Users, label: 'Farmers', route: '/admin/farmers' },
+        { icon: CheckCircle, label: 'Approvals', route: '/admin/approvals' },
+        { icon: MapPin, label: 'Locations', route: '/admin/locations' },
     ];
 
-    const isActive = (route) => location.pathname.startsWith(route);
+    // Improved active detection
+    const isActive = (route) => {
+        if (route === '/admin') {
+            return location.pathname === '/admin'; // Exact match for dashboard
+        }
+        return location.pathname.startsWith(route);
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50">
